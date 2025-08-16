@@ -1,0 +1,2221 @@
+{
+  "name": "upload file + supabase",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "decode",
+        "token": "={{ $json.token }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        784
+      ],
+      "id": "6deb445b-f6cf-4544-9cf7-0411e17d85e3",
+      "name": "JWT",
+      "credentials": {
+        "jwtAuth": {
+          "id": "s2PV6cDo1nnX3Hcd",
+          "name": "JWT Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6008934a-29d4-4fa0-8da9-1d17a49351cb",
+              "leftValue": "={{ $json.token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1216,
+        784
+      ],
+      "id": "c5a506e3-450c-48b0-901c-0acc56660fff",
+      "name": "isToken?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = Math.floor(Date.now() / 1000);\nconst exp = $json.payload.exp;\nreturn [\n  {\n    json: {\n      isExpired: now > exp,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        784
+      ],
+      "id": "f1fdfc74-3fab-4a8c-8a0f-617f0e8f652d",
+      "name": "validation exp token"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0a86cff5-bf94-432f-839c-ae3e232b4c28",
+              "leftValue": "={{ $json.isExpired }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -752,
+        784
+      ],
+      "id": "75bac33e-ef03-4b37-a735-dd03310187af",
+      "name": "isToken exp?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Sesi anda telah berakhir, harap lakukan login terlebih dahulu\"\n}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -752,
+        1264
+      ],
+      "id": "448fdfc5-a415-4537-bdd6-87d92f58adcd",
+      "name": "Response token exp"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"harap lakukan login terlebih dahulu\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1216,
+        1248
+      ],
+      "id": "d84dac23-1d4b-4868-94e4-f1bdbc18538d",
+      "name": "Response token isEmpty"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "token",
+              "value": "={{ $json.headers[\"authorization\"] ? $json.headers[\"authorization\"].replace(\"Bearer \", \"\").trim() : '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "db4337bf-1618-459a-b8db-c67d3b5327f5",
+      "name": "tokenInput",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -1344,
+        784
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-pdf",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "file"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1600,
+        464
+      ],
+      "id": "0c66261e-e22d-4bae-913c-7fd17b2e7f3c",
+      "name": "Webhook chatbot trigger",
+      "webhookId": "d367bb5a-5511-446a-a8d9-d6f643b779f9"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-Chatbot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "370021dd-06b4-4031-9285-b84fea893e77"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-Chatbot"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3ce4cc90-6565-4db6-9c5b-ed3ffbd6bc7d",
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-Lerning-Based",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-Lerning-Based"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5cfebcde-ec11-4949-bc1e-319555751dc3",
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-PDF-Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-PDF-Agent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "41e6e8eb-3d5d-4d59-b464-02ea797d417b",
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-Image-Generator",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-Image-Generator"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cc87bac3-edd3-4dc5-a10e-db03e486c34c",
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-Company-Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-Company-Agent"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -480,
+        720
+      ],
+      "id": "dad29588-6cf1-4a04-97d3-8c6dd3d519b6",
+      "name": "Switch1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        240,
+        720
+      ],
+      "id": "cffb6881-adba-4c67-b126-d8cc14b5a96f",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file0",
+        "options": {
+          "keepSource": "binary"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        544,
+        720
+      ],
+      "id": "4b567d35-af8b-4b74-8fa3-da57d3e72461",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $('Extract from File').item.json.text }}"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $('Webhook chatbot trigger').item.binary.file0.fileName }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1589b92-f251-4c09-b4e4-380cebdd35c8",
+      "name": "get pdf text",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1920,
+        784
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "chatInput",
+              "value": "={{ $('Webhook chatbot trigger').item.json.body.prompt }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $('JWT').item.json.payload.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c57ab1fd-a5de-4b86-bb9e-8ec16c020d9e",
+      "name": "chat prompt set2",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3008,
+        784
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a5e94952-004b-4d67-90ff-fce5e6e2110d",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        736
+      ],
+      "id": "d9d21185-9a00-487b-aa93-eed403055b8a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        4512,
+        784
+      ],
+      "id": "dba7fe77-fe5e-4aff-925d-2dc66ddc6481",
+      "name": "Chat Respond2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $json.chatInput,\n      response: JSON.stringify($json.output)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4352,
+        784
+      ],
+      "id": "032fec8c-f348-407c-acb6-bc853fd2de68",
+      "name": "response code2"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        4144,
+        992
+      ],
+      "id": "21800349-17b6-46d2-a483-55f6cdb0e06e",
+      "name": "chat core memory2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Input dari pengguna: {{ $('chat prompt set2').first().json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a professional AI assistant who MUST use tools when available. Use the QDRANT tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence."
+        }
+      },
+      "id": "d1e47639-3ef1-4479-aace-e896dcaa1eca",
+      "name": "ChatCore2",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        4032,
+        784
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "389c0e92-f9bc-4c38-a4e9-47034ce5d390",
+              "name": "sessionId",
+              "value": "={{ $('JWT').first().json.payload.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3824,
+        784
+      ],
+      "id": "6d1ba967-4ab1-4559-9c54-3ce4864e77d3",
+      "name": "build prompt2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst lastItem = allItems[allItems.length - 1];\n\nif (lastItem && Array.isArray(lastItem.json.messages)) {\n  const messages = lastItem.json.messages;\n  const count = messages.length;\n\n  if (count === 0) return [{ json: { message: \"\" } }];\n\n  const extractFirstLine = (text) => {\n    if (!text) return \"\";\n    return text.split('\\n')[0].replace(/^Input from user:\\s*/, '');\n  };\n\n  const trimEndNewline = (text) => {\n    if (!text) return \"\";\n    return text.replace(/\\n+$/, '');\n  };\n\n  const selectedMessages = (count === 1) ? [messages[0]] : messages.slice(-1);\n\n  const combinedMessage = selectedMessages.map((msg, idx) => {\n    return `Message ${idx + 1}:\\nhuman: ${extractFirstLine(msg.human)}\\nai: ${trimEndNewline(msg.ai)}`;\n  }).join('\\n\\n');\n\n  return [{ json: { messages: combinedMessage } }];\n}\n\nreturn [{ json: { messages: \"\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        784
+      ],
+      "id": "42435d09-696a-498e-9dde-947dd5442ed2",
+      "name": "latestContext2"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        3184,
+        976
+      ],
+      "id": "70ada185-f383-499f-8e7a-8b0e4bcb3497",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "options": {
+          "groupMessages": true
+        }
+      },
+      "id": "6146f8f8-6512-4c3c-9eb8-9c0e528037c5",
+      "name": "conversationStore2",
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "position": [
+        3184,
+        784
+      ],
+      "typeVersion": 1.1,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "source",
+              "value": "={{ $json.metadata.source }}"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $json.metadata.filename }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "30d27db0-c36b-46d1-84b1-5426808c1256",
+      "name": "pdf chunks",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2352,
+        784
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst fullText = items.map(item => item.json.text || \"\").join(\" \");\n\n// Cari item yang punya properti fileName\nconst fileName = $input.first().json.fileName\n\nconst chunkSize = 500;\nconst overlap = 100;\nconst chunks = [];\n\nfor (let i = 0; i < fullText.length; i += chunkSize - overlap) {\n  const chunk = fullText.slice(i, i + chunkSize);\n  chunks.push({\n    json: {\n      text: chunk,\n      metadata: {\n        source: \"shared_pdf\",\n        filename: fileName,\n        uploadedAt: new Date().toISOString()\n      }\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        784
+      ],
+      "id": "e9ce07fb-f671-407d-90de-bf45bc3476ee",
+      "name": "Split PDF into Chunks"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Ambil nama file dari binary atau fallback \"unknown.pdf\"\nconst fileNameItem = items.find(item => item.binary?.file0?.fileName);\nconst fileName = fileNameItem?.binary?.file0?.fileName || \"unknown.pdf\";\n\n// Buat metadata saja, tanpa chunk\nconst metadata = {\n  source: \"learning_based\",\n  filename: fileName,\n  uploadedAt: new Date().toISOString(),\n  user_upload_id: $('JWT').first().json.payload.id\n};\n\n// Return hanya metadata\nreturn [\n  {\n    json: { metadata }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        720
+      ],
+      "id": "24471a10-b95e-46ae-87ea-561469e240e1",
+      "name": "Split PDF into Chunks3",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "embeddingBatchSize": 1536,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        2608,
+        784
+      ],
+      "id": "22b021c7-8f96-41dc-b090-13c64f43721e",
+      "name": "Supabase Vector Store2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RYdI2onLPkG6NSKX",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "filename",
+                "value": "={{ $('Split PDF into Chunks').item.json.metadata.filename }}"
+              },
+              {
+                "name": "uploadedAt",
+                "value": "={{ $('Split PDF into Chunks').item.json.metadata.uploadedAt }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $('Split PDF into Chunks').item.json.metadata.source }}"
+              },
+              {
+                "name": "user_id",
+                "value": "={{ $('JWT').item.json.payload.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        2720,
+        960
+      ],
+      "id": "5c9c1173-ffa0-4d96-9d46-c71686ec8e21",
+      "name": "Default Data Loader4"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
+      "typeVersion": 1,
+      "position": [
+        2720,
+        1136
+      ],
+      "id": "bc8c03f5-938e-4c46-ac38-5a95fc1c882b",
+      "name": "Token Splitter4"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "You are a professional AI assistant who MUST use tools when available. Use the SUPABASE tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        4272,
+        1104
+      ],
+      "id": "a90daa15-8d7b-4068-9d00-dd0542a3f1f9",
+      "name": "Supabase Vector Store3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RYdI2onLPkG6NSKX",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.metadata }}",
+        "options": {
+          "systemMessage": "=You are an agent that checks document metadata in Supabase.\nI will provide you with a list of vector search results along with their metadata.\nYour task:\n\n1. Check if there is any document whose metadata.userID matches the user_upload_id: {{ $json.metadata.user_upload_id }} I provide.\n2. If there is at least one matching document, respond only with the word: true.\n3. If there is no match, respond only with the word: false.\n4. Do not provide any additional explanation or text outside of the word true/false."
+        }
+      },
+      "id": "4ee85d44-1135-4394-ba80-ef54f721bdc6",
+      "name": "ChatCore4",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1120,
+        736
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "You are a professional AI assistant who MUST use tools when available. Use the SUPABASE tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence.",
+        "tableName": {
+          "__rl": true,
+          "value": "learning_pdf",
+          "mode": "list",
+          "cachedResultName": "learning_pdf"
+        },
+        "topK": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        928
+      ],
+      "id": "24bb3063-1808-49f0-8aa6-e03cfdcfa8ea",
+      "name": "Supabase Vector Store4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RYdI2onLPkG6NSKX",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1712,
+        2560
+      ],
+      "id": "93f623e8-28f1-49f3-acd5-0714fe8fd617",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "OpenAi local"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "=/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2464,
+        1136
+      ],
+      "id": "87fc6740-9c9d-4fc0-bc95-97ed4e977791",
+      "name": "Embeddings OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "OpenAi local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "=/mnt/sfs_turbo/model/bge-large-en-v1.5",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3840,
+        1264
+      ],
+      "id": "dab28b26-0c0e-4546-9cf3-b53dc51994be",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "OpenAi local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "=/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        4208,
+        1408
+      ],
+      "id": "b132fe8f-8e97-4f0f-a853-d8312b8f8728",
+      "name": "Embeddings OpenAI3",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "OpenAi local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"dokumen anda telah terupload\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "c9479923-33c2-419e-ae1a-a36f88d8cc67",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file0",
+        "options": {
+          "keepSource": "binary"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "19b64716-6272-49c3-910e-b3760f4e05cb",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst fullText = items.map(item => item.json.text || \"\").join(\" \");\n\n// Cari item yang punya properti fileName\nconst fileNameItem = items.find(item => item.binary?.file0?.fileName);\nconst fileName = fileNameItem?.binary?.file0?.fileName || \"unknown.pdf\";\n\nconst chunkSize = 500;\nconst overlap = 100;\nconst chunks = [];\n\nfor (let i = 0; i < fullText.length; i += chunkSize - overlap) {\n  const chunk = fullText.slice(i, i + chunkSize);\n  chunks.push({\n    json: {\n      text: chunk,\n      metadata: {\n        source: \"learning_based\",\n        filename: fileName,\n        uploadedAt: new Date().toISOString()\n      }\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "6bdbec3a-c82a-488f-887d-bceaad779a75",
+      "name": "Split PDF into Chunks2"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "source",
+              "value": "={{ $json.metadata.source }}"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $json.metadata.filename }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8cd041b3-efc1-4981-adff-9bda312c3270",
+      "name": "pdf chunks2",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        608,
+        0
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "89d93f74-a23f-4572-83d9-e4b8a1e08608",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "embeddingBatchSize": 1024,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        0
+      ],
+      "id": "6874f476-1aa1-401b-af45-38b7c9e45881",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RYdI2onLPkG6NSKX",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "filename",
+                "value": "={{ $('Split PDF into Chunks2').item.json.metadata.filename }}"
+              },
+              {
+                "name": "uploadedAt",
+                "value": "={{ $('Split PDF into Chunks2').item.json.metadata.uploadedAt }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $('Split PDF into Chunks2').item.json.metadata.source }}"
+              },
+              {
+                "name": "userID",
+                "value": "={{ $('JWT').item.json.payload.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        160
+      ],
+      "id": "6898e8bd-ec93-4bda-b590-bcd2749f6483",
+      "name": "Default Data Loader3"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
+      "typeVersion": 1,
+      "position": [
+        992,
+        320
+      ],
+      "id": "9d324379-709a-4b11-bfa5-bfe3c971c534",
+      "name": "Token Splitter3"
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        240
+      ],
+      "id": "c1fdb796-682e-4b74-b336-ded08508efa9",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "OpenAi local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        704,
+        960
+      ],
+      "id": "deb57695-a864-4268-9957-01f1bac63d05",
+      "name": "Azure OpenAI Chat Model",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "RwVqt0OrwmGJYg8Q",
+          "name": "gpt 4"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "chatInput",
+              "value": "={{ $('Webhook chatbot trigger').item.json.body.prompt }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $('JWT').item.json.payload.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "714d6654-8bad-4cb7-a5e3-19368cd05d7c",
+      "name": "chat prompt set",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -160,
+        1488
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1968,
+        2080
+      ],
+      "id": "91c76faf-a19d-4a5d-864b-c36282cefa5b",
+      "name": "Chat Respond",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $json.chatInput,\n      response: JSON.stringify($json.output)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        2080
+      ],
+      "id": "121feaf4-bc37-421b-b623-39974ba1e971",
+      "name": "response code",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1584,
+        2288
+      ],
+      "id": "80b979df-6414-485f-a424-9a063dfe96bb",
+      "name": "chat core memory",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Input dari pengguna: {{ $('chat prompt set').first().json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a professional AI assistant who MUST use tools when available. Use the SUPABASE tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence."
+        }
+      },
+      "id": "0de40d9f-1ae8-4948-972a-7a903d42caaf",
+      "name": "ChatCore",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1472,
+        2080
+      ],
+      "typeVersion": 1.9,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "389c0e92-f9bc-4c38-a4e9-47034ce5d390",
+              "name": "sessionId",
+              "value": "={{ $('JWT').first().json.payload.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        1488
+      ],
+      "id": "b055a5c6-411f-4980-933b-5809a228ca64",
+      "name": "build prompt"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst lastItem = allItems[allItems.length - 1];\n\nif (lastItem && Array.isArray(lastItem.json.messages)) {\n  const messages = lastItem.json.messages;\n  const count = messages.length;\n\n  if (count === 0) return [{ json: { message: \"\" } }];\n\n  const extractFirstLine = (text) => {\n    if (!text) return \"\";\n    return text.split('\\n')[0].replace(/^Input from user:\\s*/, '');\n  };\n\n  const trimEndNewline = (text) => {\n    if (!text) return \"\";\n    return text.replace(/\\n+$/, '');\n  };\n\n  const selectedMessages = (count === 1) ? [messages[0]] : messages.slice(-1);\n\n  const combinedMessage = selectedMessages.map((msg, idx) => {\n    return `Message ${idx + 1}:\\nhuman: ${extractFirstLine(msg.human)}\\nai: ${trimEndNewline(msg.ai)}`;\n  }).join('\\n\\n');\n\n  return [{ json: { messages: combinedMessage } }];\n}\n\nreturn [{ json: { messages: \"\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        1488
+      ],
+      "id": "d5f4fda6-0f9b-47cc-9fb3-139d4f2999e0",
+      "name": "latestContext"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        1680
+      ],
+      "id": "cad13b9d-c921-422d-b70e-15fcfeafda24",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {
+          "groupMessages": true
+        }
+      },
+      "id": "9e38a073-9562-40c9-988a-33f62dc2de03",
+      "name": "conversationStore",
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "position": [
+        16,
+        1488
+      ],
+      "typeVersion": 1.1,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "You are a professional AI assistant who MUST use tools when available. Use the SUPABASE tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence.",
+        "tableName": {
+          "__rl": true,
+          "value": "rpc/match_documents",
+          "mode": "list",
+          "cachedResultName": "rpc/match_documents"
+        },
+        "topK": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1712,
+        2400
+      ],
+      "id": "72ccfb83-48cb-4044-af09-61c049caac88",
+      "name": "Supabase Vector Store5",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RYdI2onLPkG6NSKX",
+          "name": "Supabase account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "DeepSeek-V3",
+          "mode": "list",
+          "cachedResultName": "DeepSeek-V3"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        960
+      ],
+      "id": "10d55830-cb98-469e-a1d0-0b46ac193b5c",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "INgjVt6tDQOu3o0W",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        1136
+      ],
+      "id": "abbcc734-8b01-4bec-baef-880b06582c47",
+      "name": "Embeddings OpenAI4",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "OpenAi local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        2352
+      ],
+      "id": "24594189-54e7-41aa-b476-618af646cefd",
+      "name": "Azure OpenAI Chat Model1",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "RwVqt0OrwmGJYg8Q",
+          "name": "gpt 4"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        2528
+      ],
+      "id": "99c9bbd4-1f49-43c8-913e-3ac35368ca54",
+      "name": "Embeddings Azure OpenAI",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "AuNyqSLKjNTOi66l",
+          "name": "embed"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        704,
+        1136
+      ],
+      "id": "1735f54a-5626-4460-aa31-0b1a5d0f8b5d",
+      "name": "Embeddings Azure OpenAI1",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "AuNyqSLKjNTOi66l",
+          "name": "embed"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "DeepSeek-V3",
+          "mode": "list",
+          "cachedResultName": "DeepSeek-V3"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        2304
+      ],
+      "id": "a23cc3db-2b2e-41a7-929b-ec064c42c68f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "INgjVt6tDQOu3o0W",
+          "name": "deepseek"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "tableName": {
+          "__rl": true,
+          "value": "rpc/match_documents",
+          "mode": "list",
+          "cachedResultName": "rpc/match_documents"
+        },
+        "prompt": "={{ $('chat prompt set').item.json.chatInput }}",
+        "topK": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        848,
+        1488
+      ],
+      "id": "b1df6874-cd1a-4d20-8211-e7677cc21575",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RYdI2onLPkG6NSKX",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        1648
+      ],
+      "id": "16409974-fda3-4aca-9fea-2e4ab8031a0b",
+      "name": "Embeddings OpenAI5",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "embed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('chat prompt set').first().json.chatInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are given search results retrieved from a Supabase Vector Store.  \nThe results contain text chunks and metadata related to company or document information.  \n\nYour task:  \n1. Analyze the retrieved content and focus only on the provided data.  \n2. Summarize or answer the user’s question clearly and concisely, based strictly on the retrieved information.  \n3. If the user’s query cannot be answered using the given data, respond with:  \n   \"I'm sorry, I could not find the relevant information in the provided data.\"  \n\nUser query: {{ $('chat prompt set').first().json.chatInput }}\n\nRetrieved data from supabase:\n{{ $json.combinedDocs }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1312,
+        1488
+      ],
+      "id": "23b35d52-657f-455e-8421-13a0e4f1522a",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "DeepSeek-V3",
+          "mode": "list",
+          "cachedResultName": "DeepSeek-V3"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1312,
+        1680
+      ],
+      "id": "6a99e1f4-bd12-440d-8051-bf0f3331e62b",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "INgjVt6tDQOu3o0W",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = $input.all().map(item => {\n  const doc = item.json.document;\n  return `Text: ${doc.pageContent}\\nSource: ${doc.metadata?.filename || 'unknown'}`;\n}).join(\"\\n\\n---\\n\\n\");\n\nreturn [\n  {\n    json: {\n      combinedDocs: docs\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        1488
+      ],
+      "id": "223ab5ce-8565-4163-8cff-dcce1a66b3f2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1776,
+        1488
+      ],
+      "id": "90aaa9de-62aa-44d4-9894-66454ddad20c",
+      "name": "Chat Respond3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $('chat prompt set').first().json.chatInput,\n      response: JSON.stringify($input.first().json.text)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        1488
+      ],
+      "id": "67358277-948e-4b6d-8230-569af0c2c66c",
+      "name": "response code1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "JWT": {
+      "main": [
+        [
+          {
+            "node": "validation exp token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "isToken?": {
+      "main": [
+        [
+          {
+            "node": "JWT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response token isEmpty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validation exp token": {
+      "main": [
+        [
+          {
+            "node": "isToken exp?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "isToken exp?": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response token exp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tokenInput": {
+      "main": [
+        [
+          {
+            "node": "isToken?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook chatbot trigger": {
+      "main": [
+        [
+          {
+            "node": "tokenInput",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "chat prompt set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Split PDF into Chunks3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get pdf text": {
+      "main": [
+        [
+          {
+            "node": "Split PDF into Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat prompt set2": {
+      "main": [
+        [
+          {
+            "node": "conversationStore2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "get pdf text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code2": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat core memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "ChatCore2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatCore2": {
+      "main": [
+        [
+          {
+            "node": "response code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build prompt2": {
+      "main": [
+        [
+          {
+            "node": "ChatCore2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "latestContext2": {
+      "main": [
+        [
+          {
+            "node": "build prompt2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "conversationStore2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "conversationStore2": {
+      "main": [
+        [
+          {
+            "node": "latestContext2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pdf chunks": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split PDF into Chunks": {
+      "main": [
+        [
+          {
+            "node": "pdf chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split PDF into Chunks3": {
+      "main": [
+        [
+          {
+            "node": "ChatCore4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store2": {
+      "main": [
+        [
+          {
+            "node": "chat prompt set2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader4": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Splitter4": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader4",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store3": {
+      "ai_tool": [
+        [
+          {
+            "node": "ChatCore2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatCore4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store4": {
+      "ai_tool": [
+        [
+          {
+            "node": "ChatCore4",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store5",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ChatCore2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI3": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store3",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Split PDF into Chunks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split PDF into Chunks2": {
+      "main": [
+        [
+          {
+            "node": "pdf chunks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pdf chunks2": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader3": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Splitter3": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader3",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "chat prompt set": {
+      "main": [
+        [
+          {
+            "node": "conversationStore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat core memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "ChatCore",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatCore": {
+      "main": [
+        [
+          {
+            "node": "response code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build prompt": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "latestContext": {
+      "main": [
+        [
+          {
+            "node": "build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "conversationStore",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "conversationStore": {
+      "main": [
+        [
+          {
+            "node": "latestContext",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store5": {
+      "ai_tool": [
+        [
+          {
+            "node": "ChatCore",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ChatCore4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI4": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store4",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model1": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Embeddings Azure OpenAI": {
+      "ai_embedding": [
+        []
+      ]
+    },
+    "Embeddings Azure OpenAI1": {
+      "ai_embedding": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ChatCore",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI5": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "response code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code1": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "95a0eba7-7264-43bf-818e-b52a8afadc18",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3ab3ea888e2351e019c80d2444ed6a51f0fb0c8c36082e349005ab23e6aad9e1"
+  },
+  "id": "uf4YzMi9VrOfPYg9",
+  "tags": []
+}

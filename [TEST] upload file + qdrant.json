@@ -1,0 +1,2905 @@
+{
+  "name": "upload file + qdrant",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "decode",
+        "token": "={{ $json.token }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -6496,
+        560
+      ],
+      "id": "069f5e16-a27c-42e5-a2a3-adb5d7dde905",
+      "name": "JWT",
+      "credentials": {
+        "jwtAuth": {
+          "id": "s2PV6cDo1nnX3Hcd",
+          "name": "JWT Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6008934a-29d4-4fa0-8da9-1d17a49351cb",
+              "leftValue": "={{ $json.token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -6672,
+        560
+      ],
+      "id": "a6992201-93e7-40e4-8f07-f32079dccd2c",
+      "name": "isToken?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = Math.floor(Date.now() / 1000);\nconst exp = $json.payload.exp;\nreturn [\n  {\n    json: {\n      isExpired: now > exp,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6352,
+        560
+      ],
+      "id": "c54bdb5d-19e2-44eb-b9ed-56f8715b8a45",
+      "name": "validation exp token"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0a86cff5-bf94-432f-839c-ae3e232b4c28",
+              "leftValue": "={{ $json.isExpired }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -6208,
+        560
+      ],
+      "id": "4f0ad9fd-0d46-4a73-bf00-a97bacc383c9",
+      "name": "isToken exp?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Sesi anda telah berakhir, harap lakukan login terlebih dahulu\"\n}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -6208,
+        1040
+      ],
+      "id": "59f564ea-96eb-4dfa-8ad9-f94c1749c25d",
+      "name": "Response token exp"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"harap lakukan login terlebih dahulu\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -6672,
+        1024
+      ],
+      "id": "dd4f0a46-8234-4400-af4e-fc23abaf40da",
+      "name": "Response token isEmpty"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "token",
+              "value": "={{ $json.headers[\"authorization\"] ? $json.headers[\"authorization\"].replace(\"Bearer \", \"\").trim() : '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a7a29dd1-143a-4296-a574-ed726c9dd670",
+      "name": "tokenInput",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -6800,
+        560
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-pdf",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "file"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -7056,
+        240
+      ],
+      "id": "460defa0-191e-434a-a6f6-a47c86c19737",
+      "name": "Webhook chatbot trigger",
+      "webhookId": "d367bb5a-5511-446a-a8d9-d6f643b779f9"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-Chatbot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "370021dd-06b4-4031-9285-b84fea893e77"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-Chatbot"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3ce4cc90-6565-4db6-9c5b-ed3ffbd6bc7d",
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-Lerning-Based",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-Lerning-Based"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5cfebcde-ec11-4949-bc1e-319555751dc3",
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-PDF-Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-PDF-Agent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "41e6e8eb-3d5d-4d59-b464-02ea797d417b",
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-Image-Generator",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-Image-Generator"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cc87bac3-edd3-4dc5-a10e-db03e486c34c",
+                    "leftValue": "={{ $('Webhook chatbot trigger').item.json.body.model }}",
+                    "rightValue": "TSEL-Company-Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TSEL-Company-Agent"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -5936,
+        496
+      ],
+      "id": "f547c759-33ec-47f2-8cd6-089d57547a39",
+      "name": "Switch1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -7264,
+        3216
+      ],
+      "id": "b23a2567-534d-4f95-9ce4-ba604379fafa",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "embed"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"dokumen anda telah terupload\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -4384,
+        -240
+      ],
+      "id": "6fad1749-4ed6-4e1a-8082-3c2fa5478c04",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file0",
+        "options": {
+          "keepSource": "binary"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5280,
+        -240
+      ],
+      "id": "9a45a670-cf69-4035-9831-e54431a49a5b",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst fullText = items.map(item => item.json.text || \"\").join(\" \");\n\n// Cari item yang punya properti fileName\nconst fileNameItem = items.find(item => item.binary?.file0?.fileName);\nconst fileName = fileNameItem?.binary?.file0?.fileName || \"unknown.pdf\";\n\nconst chunkSize = 500;\nconst overlap = 100;\nconst chunks = [];\n\nfor (let i = 0; i < fullText.length; i += chunkSize - overlap) {\n  const chunk = fullText.slice(i, i + chunkSize);\n  chunks.push({\n    json: {\n      text: chunk,\n      metadata: {\n        source: \"learning_based\",\n        filename: fileName,\n        uploadedAt: new Date().toISOString()\n      }\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5056,
+        -240
+      ],
+      "id": "2164180b-4da2-479e-a9ed-c96d9d3b9424",
+      "name": "Split PDF into Chunks2"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "source",
+              "value": "={{ $json.metadata.source }}"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $json.metadata.filename }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "66e60fba-2638-4196-80e4-ca47d5023c5c",
+      "name": "pdf chunks2",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -4848,
+        -240
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -5456,
+        -240
+      ],
+      "id": "4a2a7e10-4cf8-4889-8e22-a637fbbb669a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "filename",
+                "value": "={{ $('Split PDF into Chunks2').item.json.metadata.filename }}"
+              },
+              {
+                "name": "uploadedAt",
+                "value": "={{ $('Split PDF into Chunks2').item.json.metadata.uploadedAt }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $('Split PDF into Chunks2').item.json.metadata.source }}"
+              },
+              {
+                "name": "userID",
+                "value": "={{ $('JWT').item.json.payload.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -4560,
+        -32
+      ],
+      "id": "2b082bf4-e723-4f2e-8f67-a61acb8e6723",
+      "name": "Default Data Loader3"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
+      "typeVersion": 1,
+      "position": [
+        -4560,
+        144
+      ],
+      "id": "a0b7aab3-6f7b-44c8-bae2-e16edb60906f",
+      "name": "Token Splitter3"
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4704,
+        64
+      ],
+      "id": "8cac67c6-4233-4ec8-9efa-c4c65bb0fb58",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "embed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "chatInput",
+              "value": "={{ $('Webhook chatbot trigger').item.json.body.prompt }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $('JWT').item.json.payload.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c24430f6-3013-4537-b56e-7912d71372c5",
+      "name": "chat prompt set",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -5488,
+        2176
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -7008,
+        2736
+      ],
+      "id": "ee1f6191-2f0d-46e4-98fc-3cb9a5f18eb9",
+      "name": "Chat Respond",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $json.chatInput,\n      response: JSON.stringify($json.output)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7184,
+        2736
+      ],
+      "id": "77dd3bcf-2b3b-4d6b-aa11-d2419b311ec3",
+      "name": "response code",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -7392,
+        2944
+      ],
+      "id": "7bfe56e8-40ac-46f7-a6f5-3726dfd381b6",
+      "name": "chat core memory",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Input dari pengguna: {{ $('chat prompt set').first().json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a professional AI assistant who MUST use tools when available. Use the SUPABASE tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence."
+        }
+      },
+      "id": "e75c185b-0da4-4063-8261-64d6c0883e34",
+      "name": "ChatCore",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -7504,
+        2736
+      ],
+      "typeVersion": 1.9,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "389c0e92-f9bc-4c38-a4e9-47034ce5d390",
+              "name": "sessionId",
+              "value": "={{ $('JWT').first().json.payload.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4672,
+        2176
+      ],
+      "id": "63bca1e6-88bc-4816-bb7a-3d9bb984e083",
+      "name": "build prompt"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst lastItem = allItems[allItems.length - 1];\n\nif (lastItem && Array.isArray(lastItem.json.messages)) {\n  const messages = lastItem.json.messages;\n  const count = messages.length;\n\n  if (count === 0) return [{ json: { message: \"\" } }];\n\n  const extractFirstLine = (text) => {\n    if (!text) return \"\";\n    return text.split('\\n')[0].replace(/^Input from user:\\s*/, '');\n  };\n\n  const trimEndNewline = (text) => {\n    if (!text) return \"\";\n    return text.replace(/\\n+$/, '');\n  };\n\n  const selectedMessages = (count === 1) ? [messages[0]] : messages.slice(-1);\n\n  const combinedMessage = selectedMessages.map((msg, idx) => {\n    return `Message ${idx + 1}:\\nhuman: ${extractFirstLine(msg.human)}\\nai: ${trimEndNewline(msg.ai)}`;\n  }).join('\\n\\n');\n\n  return [{ json: { messages: combinedMessage } }];\n}\n\nreturn [{ json: { messages: \"\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4896,
+        2176
+      ],
+      "id": "9170d4f4-008c-421d-b122-6ad4210780f7",
+      "name": "latestContext"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -5312,
+        2368
+      ],
+      "id": "0e8760dc-82c9-4f85-9fef-0dd9add7679f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {
+          "groupMessages": true
+        }
+      },
+      "id": "02c151ce-a0f8-4d88-9dce-20c6cf8be2cd",
+      "name": "conversationStore",
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "position": [
+        -5312,
+        2176
+      ],
+      "typeVersion": 1.1,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "You are a professional AI assistant who MUST use tools when available. Use the SUPABASE tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence.",
+        "tableName": {
+          "__rl": true,
+          "value": "rpc/match_documents",
+          "mode": "list",
+          "cachedResultName": "rpc/match_documents"
+        },
+        "topK": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -7264,
+        3056
+      ],
+      "id": "ea24f46c-a2a6-441a-88a2-30fa1b0dd936",
+      "name": "Supabase Vector Store5",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RYdI2onLPkG6NSKX",
+          "name": "Supabase account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -6880,
+        3008
+      ],
+      "id": "4b403828-bec1-4903-95b3-40282e7d446e",
+      "name": "Azure OpenAI Chat Model1",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "RwVqt0OrwmGJYg8Q",
+          "name": "gpt 4"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -6880,
+        3184
+      ],
+      "id": "eea7862b-f3a3-4877-8db3-fbbfe0e50c07",
+      "name": "Embeddings Azure OpenAI",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "AuNyqSLKjNTOi66l",
+          "name": "embed"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "DeepSeek-V3",
+          "mode": "list",
+          "cachedResultName": "DeepSeek-V3"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -7536,
+        2960
+      ],
+      "id": "8ec3d4fc-fd87-4628-81f1-93b9858bdb68",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "INgjVt6tDQOu3o0W",
+          "name": "deepseek"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4464,
+        2368
+      ],
+      "id": "4d45a8b4-0fd6-42e7-9362-5856665c1b68",
+      "name": "Embeddings OpenAI5",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "embed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('chat prompt set').first().json.chatInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are given search results retrieved from a Qdrant Vector Store.  \nThe results contain text chunks and metadata related to company or document information.  \n\nYour task:  \n1. Analyze the retrieved content and focus only on the provided data.  \n2. Summarize or answer the user’s question clearly and concisely, based strictly on the retrieved information.  \n3. If the user’s query cannot be answered using the given data, respond with:  \n   \"I'm sorry, I could not find the relevant information in the provided data.\"  \n\nUser query: {{ $('chat prompt set').first().json.chatInput }}\n\nRetrieved data from Qdrant:\n{{ $json.combinedDocs }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -4016,
+        2176
+      ],
+      "id": "8dae14d8-b8c3-4a88-bc77-bee9a7d142b4",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "DeepSeek-V3",
+          "mode": "list",
+          "cachedResultName": "DeepSeek-V3"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4016,
+        2368
+      ],
+      "id": "729ce183-6604-4d17-9e1d-2786cb0720b5",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "INgjVt6tDQOu3o0W",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -3552,
+        2176
+      ],
+      "id": "6f1b45bc-a6b7-4eec-af6b-8c3cfeb5f523",
+      "name": "Chat Respond3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $('chat prompt set').first().json.chatInput,\n      response: JSON.stringify($input.first().json.text)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3728,
+        2176
+      ],
+      "id": "ef140dce-14ca-4c9a-bb63-32e6c989dc59",
+      "name": "response code1"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=learning_based",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -4672,
+        -240
+      ],
+      "id": "2961b02c-7f12-4672-a685-d79713e1dab3",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "u42Oj17Zj3XoL78Z",
+          "name": "personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "learning_based",
+          "mode": "list",
+          "cachedResultName": "learning_based"
+        },
+        "prompt": "={{ $('chat prompt set').item.json.chatInput }}",
+        "topK": 1000,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -4464,
+        2176
+      ],
+      "id": "29709ad7-4ca2-4858-a214-a374da4f1e78",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "u42Oj17Zj3XoL78Z",
+          "name": "personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst fullText = items.map(item => item.json.text || \"\").join(\" \");\n\n// Cari item yang punya properti fileName\nconst fileNameItem = items.find(item => item.binary?.file0?.fileName);\nconst fileName = fileNameItem?.binary?.file0?.fileName || \"unknown.pdf\";\n\nconst chunkSize = 500;\nconst overlap = 100;\nconst chunks = [];\n\nfor (let i = 0; i < fullText.length; i += chunkSize - overlap) {\n  const chunk = fullText.slice(i, i + chunkSize);\n  chunks.push({\n    json: {\n      text: chunk,\n      metadata: {\n        source: \"shared_pdf\",\n        filename: fileName,\n        uploadedAt: new Date().toISOString()\n      }\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3488,
+        1136
+      ],
+      "id": "531641de-146d-471d-8f9a-8f3c13b85c3d",
+      "name": "Split PDF into Chunks"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "fileName",
+                "value": "={{ $('pdf chunks').item.json.fileName }}"
+              },
+              {
+                "name": "uploadedAt",
+                "value": "={{ $('Split PDF into Chunks').item.json.metadata.uploadedAt }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $('pdf chunks').item.json.source }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "bccdb4b2-29cc-46a6-8e3f-f0e5fe71d109",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        -2896,
+        1328
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "source",
+              "value": "={{ $json.metadata.source }}"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $json.metadata.filename }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4984bfad-af50-443a-afe8-f5e560f4dafe",
+      "name": "pdf chunks",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -3296,
+        1136
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a5e94952-004b-4d67-90ff-fce5e6e2110d",
+              "leftValue": "={{ $json.result.exists }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4208,
+        768
+      ],
+      "id": "973803ee-ca9d-4bc3-a70f-12f29c90a39c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "collectionExists",
+        "collectionName": "={{ $('JWT').item.json.payload.id }}_db_temporary",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-qdrant.qdrant",
+      "typeVersion": 1,
+      "position": [
+        -4448,
+        784
+      ],
+      "id": "abb1733f-11c9-4bc2-9db1-e23835136624",
+      "name": "Check Collection Exists",
+      "executeOnce": false,
+      "credentials": {
+        "qdrantRestApi": {
+          "id": "f9av1oJo8MflWrS3",
+          "name": "Personal Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst fullText = items.map(item => item.json.text || \"\").join(\" \");\n\n// Cari item yang punya properti fileName\nconst fileNameItem = items.find(item => item.binary?.file0?.fileName);\nconst fileName = fileNameItem?.binary?.file0?.fileName || \"unknown.pdf\";\n\nconst chunkSize = 500;\nconst overlap = 100;\nconst chunks = [];\n\nfor (let i = 0; i < fullText.length; i += chunkSize - overlap) {\n  const chunk = fullText.slice(i, i + chunkSize);\n  chunks.push({\n    json: {\n      text: chunk,\n      metadata: {\n        source: \"shared_pdf\",\n        filename: fileName,\n        uploadedAt: new Date().toISOString()\n      }\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3440,
+        448
+      ],
+      "id": "c4c05d89-2657-4e2a-ad2c-b0f5f38ad356",
+      "name": "Split PDF into Chunks1"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "source",
+              "value": "={{ $json.metadata.source }}"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $json.metadata.filename }}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "id": "4fc412f5-741d-4f98-9d6f-0d2e5af42269",
+      "name": "pdf chunks1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -3296,
+        448
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $('Extract from File').item.json.text }}"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $('Webhook chatbot trigger').item.binary.file0.fileName }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "83dbbb82-e3f4-4eac-bd24-5e3221a5cf76",
+      "name": "get pdf text1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -3600,
+        448
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {
+          "groupMessages": true
+        }
+      },
+      "id": "372eb03a-8055-4cc3-bf73-cd1320a105eb",
+      "name": "conversationStore2",
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "position": [
+        -2464,
+        1136
+      ],
+      "typeVersion": 1.1,
+      "executeOnce": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2464,
+        1328
+      ],
+      "id": "bf648ccd-5d85-47e3-9e21-a116315f2561",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst lastItem = allItems[allItems.length - 1];\n\nif (lastItem && Array.isArray(lastItem.json.messages)) {\n  const messages = lastItem.json.messages;\n  const count = messages.length;\n\n  if (count === 0) return [{ json: { message: \"\" } }];\n\n  const extractFirstLine = (text) => {\n    if (!text) return \"\";\n    return text.split('\\n')[0].replace(/^Input from user:\\s*/, '');\n  };\n\n  const trimEndNewline = (text) => {\n    if (!text) return \"\";\n    return text.replace(/\\n+$/, '');\n  };\n\n  const selectedMessages = (count === 1) ? [messages[0]] : messages.slice(-1);\n\n  const combinedMessage = selectedMessages.map((msg, idx) => {\n    return `Message ${idx + 1}:\\nhuman: ${extractFirstLine(msg.human)}\\nai: ${trimEndNewline(msg.ai)}`;\n  }).join('\\n\\n');\n\n  return [{ json: { messages: combinedMessage } }];\n}\n\nreturn [{ json: { messages: \"\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2160,
+        1136
+      ],
+      "id": "8de1e103-bb5e-4ea2-af9b-b983effea854",
+      "name": "latestContext2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "389c0e92-f9bc-4c38-a4e9-47034ce5d390",
+              "name": "sessionId",
+              "value": "={{ $('JWT').first().json.payload.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1984,
+        1136
+      ],
+      "id": "6d93bc5a-8108-43d9-bdd7-afcabd467089",
+      "name": "build prompt2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Input dari pengguna: {{ $('chat prompt set2').first().json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a professional AI assistant who MUST use tools when available. Use the QDRANT tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence."
+        }
+      },
+      "id": "7198bbd2-5631-411d-a523-c73d04d0881a",
+      "name": "ChatCore2",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -1072,
+        2128
+      ],
+      "typeVersion": 1.9,
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1056,
+        2352
+      ],
+      "id": "cf92d0bf-8329-45c3-9f0d-acd9aa300381",
+      "name": "chat core memory2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $json.chatInput,\n      response: JSON.stringify($json.output)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        2128
+      ],
+      "id": "68c3df15-c8e9-4d2a-9d2e-21de557d6411",
+      "name": "response code2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -592,
+        2128
+      ],
+      "id": "fc31b443-a1f0-4fab-870c-6613c1240931",
+      "name": "Chat Respond2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "chatInput",
+              "value": "={{ $('Webhook chatbot trigger').item.json.body.prompt }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $('JWT').item.json.payload.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "233dbb0f-99b2-4e91-9b61-8ac9778b007c",
+      "name": "chat prompt set2",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -2640,
+        1136
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "={{ $('chat prompt set2').first().json.chatInput }}",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "={{ $('JWT').first().json.payload.id }}_db_temporary",
+          "mode": "id"
+        },
+        "topK": 5,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -912,
+        2352
+      ],
+      "id": "0a6fc7f2-2ab7-4cdb-8326-4114b29d0f74",
+      "name": "sessional qdrant db",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "deleteCollection",
+        "collectionName": {
+          "__rl": true,
+          "value": "={{ $('JWT').item.json.payload.id }}_db_temporary",
+          "mode": "name"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-qdrant.qdrant",
+      "typeVersion": 1,
+      "position": [
+        -3776,
+        448
+      ],
+      "id": "734d23ba-1ee6-4e28-bc50-7c8add5e4708",
+      "name": "Delete Collection",
+      "credentials": {
+        "qdrantRestApi": {
+          "id": "f9av1oJo8MflWrS3",
+          "name": "Personal Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
+      "typeVersion": 1,
+      "position": [
+        -2928,
+        816
+      ],
+      "id": "348ff7ec-3b7b-4cdb-b27d-f0a8f5236b82",
+      "name": "Token Splitter2"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "fileName",
+                "value": "={{ $('pdf chunks1').item.json.fileName }}"
+              },
+              {
+                "name": "uploadedAt",
+                "value": "={{ $('Split PDF into Chunks1').item.json.metadata.uploadedAt }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $('pdf chunks1').item.json.source }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "fca2ebdc-5a42-4dbd-8da2-2965bc0b0068",
+      "name": "Default Data Loader2",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        -2928,
+        624
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "={{ $('JWT').item.json.payload.id }}_db_temporary",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "244aac08-89f1-4cc6-bd47-ed1b7470ce0b",
+      "name": "Qdrant Vector Store2",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        -3056,
+        448
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "u42Oj17Zj3XoL78Z",
+          "name": "personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "groupMessages": true
+        }
+      },
+      "id": "481aa260-83bf-4944-b454-dcdbd7e62635",
+      "name": "conversationStore3",
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "position": [
+        -2416,
+        448
+      ],
+      "typeVersion": 1.1,
+      "executeOnce": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2416,
+        656
+      ],
+      "id": "5522b359-4bc0-4e46-a7ef-b3e4ed26e23d",
+      "name": "Simple Memory3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst lastItem = allItems[allItems.length - 1];\n\nif (lastItem && Array.isArray(lastItem.json.messages)) {\n  const messages = lastItem.json.messages;\n  const count = messages.length;\n\n  if (count === 0) return [{ json: { message: \"\" } }];\n\n  const extractFirstLine = (text) => {\n    if (!text) return \"\";\n    return text.split('\\n')[0].replace(/^Input from user:\\s*/, '');\n  };\n\n  const trimEndNewline = (text) => {\n    if (!text) return \"\";\n    return text.replace(/\\n+$/, '');\n  };\n\n  const selectedMessages = (count === 1) ? [messages[0]] : messages.slice(-1);\n\n  const combinedMessage = selectedMessages.map((msg, idx) => {\n    return `Message ${idx + 1}:\\nhuman: ${extractFirstLine(msg.human)}\\nai: ${trimEndNewline(msg.ai)}`;\n  }).join('\\n\\n');\n\n  return [{ json: { messages: combinedMessage } }];\n}\n\nreturn [{ json: { messages: \"\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        448
+      ],
+      "id": "45280745-8215-4ff6-b9f8-455d8c6ebe1a",
+      "name": "latestContext3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "389c0e92-f9bc-4c38-a4e9-47034ce5d390",
+              "name": "sessionId",
+              "value": "={{ $('JWT').first().json.payload.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1984,
+        448
+      ],
+      "id": "304a42f9-d42d-4609-bb1f-da36729f5af7",
+      "name": "build prompt3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Input dari pengguna: {{ $('chat prompt set3').first().json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a professional AI assistant who MUST use tools when available. Use the QDRANT tools to answer user questions, especially those related to company information or document-based content. Do not answer based on general knowledge unless the tools return no results or have low confidence."
+        }
+      },
+      "id": "80bcd412-1c8c-4773-b7c4-7a8b013a1176",
+      "name": "ChatCore3",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -1040,
+        2592
+      ],
+      "typeVersion": 1.9,
+      "executeOnce": false,
+      "disabled": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -912,
+        2800
+      ],
+      "id": "0b142ada-9b50-4f8d-8a6c-782f8ad5c5c0",
+      "name": "chat core memory3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $json.chatInput,\n      response: JSON.stringify($json.output)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        2592
+      ],
+      "id": "59d52101-e02f-4f57-bd69-9bda7ec65d58",
+      "name": "response code3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "chatInput",
+              "value": "={{ $('Webhook chatbot trigger').item.json.body.prompt }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $('JWT').item.json.payload.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "886359fd-f0f1-412c-af13-5d45cb9995d8",
+      "name": "chat prompt set3",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -2624,
+        448
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "={{ $('chat prompt set3').first().json.chatInput }}",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "={{ $('JWT').first().json.payload.id }}_db_temporary",
+          "mode": "id"
+        },
+        "topK": 5,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -768,
+        2800
+      ],
+      "id": "d0f86b73-6aac-46bc-bba3-2edca74e0043",
+      "name": "sessional qdrant db3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -5312,
+        768
+      ],
+      "id": "7d7fd994-270f-4197-823d-29b56a0fcff1",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file0",
+        "options": {
+          "keepSource": "binary"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -4832,
+        768
+      ],
+      "id": "a26de768-6a9a-4e09-8dd3-7dc4c4e9c99a",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "text",
+              "value": "={{ $('Extract from File').item.json.text }}"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $('Webhook chatbot trigger').item.binary.file0.fileName }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bd528902-fe6a-4d39-9259-3f57e0c08b0c",
+      "name": "get pdf text",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -3728,
+        1136
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -480,
+        2592
+      ],
+      "id": "fca301c1-b57e-48ce-843c-a002cc026f22",
+      "name": "Chat Respond4",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "={{ $('JWT').item.json.payload.id }}_db_temporary",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "5353ec3b-9c36-4543-bb6f-4b493592aa4d",
+      "name": "Qdrant Vector Store3",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "position": [
+        -3040,
+        1136
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "credentials": {
+        "qdrantApi": {
+          "id": "u42Oj17Zj3XoL78Z",
+          "name": "personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "DeepSeek-V3",
+          "mode": "list",
+          "cachedResultName": "DeepSeek-V3"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1056,
+        2944
+      ],
+      "id": "21e4c42f-b871-42d7-b055-7426f19f5877",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "INgjVt6tDQOu3o0W",
+          "name": "deepseek"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3072,
+        800
+      ],
+      "id": "8886c694-a738-4c58-a512-24d0a7c6e5c3",
+      "name": "Embeddings OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "embed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1728,
+        1328
+      ],
+      "id": "2486cb86-b92b-4d56-87ab-8c370ad2b8a8",
+      "name": "Embeddings OpenAI6",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "embed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('chat prompt set2').first().json.chatInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are given search results retrieved from a Qdrant Vector Store.  \nThe results contain text chunks and metadata related to company or document information.  \n\nYour task:  \n1. Analyze the retrieved content and focus only on the provided data.  \n2. Summarize or answer the user’s question clearly and concisely, based strictly on the retrieved information.  \n3. If the user’s query cannot be answered using the given data, respond with:  \n   \"I'm sorry, I could not find the relevant information in the provided data.\"  \n\nUser query: {{ $('chat prompt set2').first().json.chatInput }}\n\nRetrieved data from Qdrant:\n{{ $json.combinedDocs }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -1280,
+        1136
+      ],
+      "id": "c0883b61-ea2b-433c-b6e1-82ea9927f189",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "DeepSeek-V3",
+          "mode": "list",
+          "cachedResultName": "DeepSeek-V3"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        1328
+      ],
+      "id": "05279f81-cb6a-4e17-aa51-fb6528452d61",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "INgjVt6tDQOu3o0W",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = $input.all().map(item => {\n  const doc = item.json.document;\n  return `Text: ${doc.pageContent}\\nSource: ${doc.metadata?.filename || 'unknown'}`;\n}).join(\"\\n\\n---\\n\\n\");\n\nreturn [\n  {\n    json: {\n      combinedDocs: docs\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        1136
+      ],
+      "id": "a7186b9c-3c59-496e-867b-686daf32c879",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -816,
+        1136
+      ],
+      "id": "dfa0536e-acac-4c72-a154-32ed21f0c198",
+      "name": "Chat Respond5"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $('chat prompt set2').first().json.chatInput,\n      response: JSON.stringify($input.first().json.text)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        1136
+      ],
+      "id": "d69691c1-b89e-427e-baa3-1d5a9e951f19",
+      "name": "response code4"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "={{ $('JWT').item.json.payload.id }}_db_temporary",
+          "mode": "id"
+        },
+        "prompt": "={{ $('chat prompt set2').item.json.chatInput }}",
+        "topK": 1000,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -1728,
+        1136
+      ],
+      "id": "1ab38969-682b-4014-816a-47f560fc9513",
+      "name": "Qdrant Vector Store4",
+      "credentials": {
+        "qdrantApi": {
+          "id": "u42Oj17Zj3XoL78Z",
+          "name": "personal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = $input.all().map(item => {\n  const doc = item.json.document;\n  return `Text: ${doc.pageContent}\\nSource: ${doc.metadata?.filename || 'unknown'}`;\n}).join(\"\\n\\n---\\n\\n\");\n\nreturn [\n  {\n    json: {\n      combinedDocs: docs\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4176,
+        2176
+      ],
+      "id": "88bd91c3-ce85-471b-929b-06456561468a",
+      "name": "combine document"
+    },
+    {
+      "parameters": {
+        "model": "/mnt/sfs_turbo/model/bge-large-en-v1.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1760,
+        640
+      ],
+      "id": "2be50c3f-c26f-4422-8e03-696592dcaaae",
+      "name": "Embeddings OpenAI7",
+      "credentials": {
+        "openAiApi": {
+          "id": "UgYqYTt6VQ0Bsdo2",
+          "name": "embed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('chat prompt set3').first().json.chatInput }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are given search results retrieved from a Qdrant Vector Store.  \nThe results contain text chunks and metadata related to company or document information.  \n\nYour task:  \n1. Analyze the retrieved content and focus only on the provided data.  \n2. Summarize or answer the user’s question clearly and concisely, based strictly on the retrieved information.  \n3. If the user’s query cannot be answered using the given data, respond with:  \n   \"I'm sorry, I could not find the relevant information in the provided data.\"  \n\nUser query: {{ $('chat prompt set3').first().json.chatInput }}\n\nRetrieved data from Qdrant:\n{{ $json.combinedDocs }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -1312,
+        448
+      ],
+      "id": "dd793fa5-b639-4d90-9524-0d0077f37439",
+      "name": "Basic LLM Chain2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "DeepSeek-V3",
+          "mode": "list",
+          "cachedResultName": "DeepSeek-V3"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1312,
+        640
+      ],
+      "id": "5c2de00a-adfd-42a0-a64c-1efc7b10bfed",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "INgjVt6tDQOu3o0W",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = $input.all().map(item => {\n  const doc = item.json.document;\n  return `Text: ${doc.pageContent}\\nSource: ${doc.metadata?.filename || 'unknown'}`;\n}).join(\"\\n\\n---\\n\\n\");\n\nreturn [\n  {\n    json: {\n      combinedDocs: docs\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1472,
+        448
+      ],
+      "id": "1dbd4e01-1d70-4bcc-90ed-ff19360076f4",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"succes\": {{ $json.success }},\n  \"status\": {{ $json.status }},\n  \"chatInput\": \"{{ $('Webhook chatbot trigger').first().json.body.prompt }}\",\n  \"response\": {{ $json.response }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -848,
+        448
+      ],
+      "id": "6dd163c2-7e53-489b-a285-d3e263866a07",
+      "name": "Chat Respond6"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      status: 200,\n      chatInput: $('chat prompt set3').first().json.chatInput,\n      response: JSON.stringify($input.first().json.text)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1024,
+        448
+      ],
+      "id": "4ddbcf89-0126-4b7d-9fac-c6b7f5aa80f2",
+      "name": "response code5"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "={{ $('JWT').item.json.payload.id }}_db_temporary",
+          "mode": "id"
+        },
+        "prompt": "={{ $('chat prompt set3').item.json.chatInput }}",
+        "topK": 1000,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -1760,
+        448
+      ],
+      "id": "50b90c29-1268-4c7d-84dd-19f7269bde00",
+      "name": "Qdrant Vector Store5",
+      "credentials": {
+        "qdrantApi": {
+          "id": "u42Oj17Zj3XoL78Z",
+          "name": "personal"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "JWT": {
+      "main": [
+        [
+          {
+            "node": "validation exp token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "isToken?": {
+      "main": [
+        [
+          {
+            "node": "JWT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response token isEmpty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validation exp token": {
+      "main": [
+        [
+          {
+            "node": "isToken exp?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "isToken exp?": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response token exp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tokenInput": {
+      "main": [
+        [
+          {
+            "node": "isToken?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook chatbot trigger": {
+      "main": [
+        [
+          {
+            "node": "tokenInput",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "chat prompt set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store5",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Split PDF into Chunks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split PDF into Chunks2": {
+      "main": [
+        [
+          {
+            "node": "pdf chunks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pdf chunks2": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader3": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Splitter3": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader3",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat prompt set": {
+      "main": [
+        [
+          {
+            "node": "conversationStore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat core memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "ChatCore",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatCore": {
+      "main": [
+        [
+          {
+            "node": "response code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build prompt": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "latestContext": {
+      "main": [
+        [
+          {
+            "node": "build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "conversationStore",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "conversationStore": {
+      "main": [
+        [
+          {
+            "node": "latestContext",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store5": {
+      "ai_tool": [
+        [
+          {
+            "node": "ChatCore",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ChatCore",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI5": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "response code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code1": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "main": [
+        [
+          {
+            "node": "combine document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split PDF into Chunks": {
+      "main": [
+        [
+          {
+            "node": "pdf chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store3",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pdf chunks": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Delete Collection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get pdf text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Collection Exists": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split PDF into Chunks1": {
+      "main": [
+        [
+          {
+            "node": "pdf chunks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pdf chunks1": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get pdf text1": {
+      "main": [
+        [
+          {
+            "node": "Split PDF into Chunks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "conversationStore2": {
+      "main": [
+        [
+          {
+            "node": "latestContext2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "conversationStore2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "latestContext2": {
+      "main": [
+        [
+          {
+            "node": "build prompt2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build prompt2": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatCore2": {
+      "main": [
+        [
+          {
+            "node": "response code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat core memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "ChatCore2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code2": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat prompt set2": {
+      "main": [
+        [
+          {
+            "node": "conversationStore2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sessional qdrant db": {
+      "ai_tool": [
+        [
+          {
+            "node": "ChatCore2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Collection": {
+      "main": [
+        [
+          {
+            "node": "get pdf text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Splitter2": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader2",
+            "type": "ai_textSplitter",
+            "index": 0
+          },
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader2": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store2",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store2": {
+      "main": [
+        [
+          {
+            "node": "chat prompt set3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "conversationStore3": {
+      "main": [
+        [
+          {
+            "node": "latestContext3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "conversationStore3",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "latestContext3": {
+      "main": [
+        [
+          {
+            "node": "build prompt3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build prompt3": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatCore3": {
+      "main": [
+        [
+          {
+            "node": "response code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat core memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "ChatCore3",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code3": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat prompt set3": {
+      "main": [
+        [
+          {
+            "node": "conversationStore3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sessional qdrant db3": {
+      "ai_tool": [
+        [
+          {
+            "node": "ChatCore3",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Check Collection Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get pdf text": {
+      "main": [
+        [
+          {
+            "node": "Split PDF into Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store3": {
+      "main": [
+        [
+          {
+            "node": "chat prompt set2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ChatCore3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Qdrant Vector Store3",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI6": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store4",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "response code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code4": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store4": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "combine document": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI7": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store5",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "response code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response code5": {
+      "main": [
+        [
+          {
+            "node": "Chat Respond6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store5": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b8b55711-d863-4ec3-972d-7b1e6e6fe443",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3ab3ea888e2351e019c80d2444ed6a51f0fb0c8c36082e349005ab23e6aad9e1"
+  },
+  "id": "6mA9BTIo90mJflwI",
+  "tags": []
+}
